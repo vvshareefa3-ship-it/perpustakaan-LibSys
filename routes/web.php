@@ -37,8 +37,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('petugas/buku', [BukuController::class, 'index'])->name('petugas.buku.index');
     Route::get('petugas/laporan', [LaporanController::class, 'index'])->name('petugas.laporan');
     
-    Route::get('petugas/kategori', [KategoriController::class, 'index'])->name('kategori.index');
-    Route::get('petugas/kelas', [KelasController::class, 'index'])->name('kelas.index');
+    Route::get('petugas/kategori', [KategoriController::class, 'index'])->name('petugas.kategori.index');
+    Route::get('petugas/kelas', [KelasController::class, 'index'])->name('petugas.kelas.index');
     Route::get('/denda', [DendaController::class, 'index'])->name('denda.index');
     Route::patch('/denda/bayar/{id}', [DendaController::class, 'bayar'])->name('denda.bayar');
 });
