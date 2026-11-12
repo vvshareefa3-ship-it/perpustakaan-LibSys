@@ -89,13 +89,14 @@
                                 </a>
 
                                 {{-- Tombol Hapus --}}
-                                <form action="{{ route('kelas.destroy', $item) }}" method="POST" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-full hover:bg-rose-100 transition" onclick="return confirm('Yakin ingin menghapus kelas ini?')">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        Hapus
-                                    </button>
+                               <form action="{{ route('kelas.destroy', $item) }}" method="POST" class="inline delete-form">
+                               @csrf
+                               @method('DELETE')
+                               <button type="button" class="btn-hapus inline-flex items-center px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition" data-name="{{ $item->nama_kelas }}">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                 Hapus
+                                </button>
                                 </form>
                             </td>
                             @endif
@@ -106,6 +107,34 @@
             </div>
         </div>
     </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteButtons = document.querySelectorAll('.btn-hapus');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const form = this.closest('.delete-form');
+                const className = this.getAttribute('data-name');
 
+                Swal.fire({
+                    title: 'Hapus Data Kelas?',
+                    text: `Apakah Anda yakin ingin menghapus kelas "${className}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#f59e0b', // Warna kuning/oranye selaras
+                    cancelButtonColor: '#6b7280', // Warna abu-abu untuk batal
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    });
+</script>
 </body>
 </html>
