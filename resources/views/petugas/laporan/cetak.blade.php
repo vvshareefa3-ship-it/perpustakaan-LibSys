@@ -81,7 +81,7 @@
         <tr>
             <td class="logo-left">
                 <!-- Ganti dengan path logo sekolah Anda -->
-                <img src="{{ asset('images/Logo_BBC.jpeg') }}" alt="Logo Sekolah" width="70" height="70" style="object-fit: contain;">
+                <img src="{{ asset('Images/Logo_BBC.jpeg') }}" alt="Logo Sekolah" width="70" height="70" style="object-fit: contain;">
             </td>
             <td class="title-center">
                 <h2>PERPUSTAKAAN DIGITAL LIBSYS</h2>
@@ -90,7 +90,7 @@
             </td>
             <td class="logo-right">
                 <!-- Ganti dengan path logo LibSys Anda -->
-                <img src="{{ asset('images/Logo_LibSys.png') }}" alt="Logo LibSys" width="70" height="70" style="object-fit: contain;">
+                <img src="{{ asset('Images/Logo_LibSys.png') }}" alt="Logo LibSys" width="70" height="70" style="object-fit: contain;">
             </td>
         </tr>
     </table>
