@@ -77,10 +77,11 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/peminjaman/{id}', [PeminjamanController::class, 'destroy'])->name('peminjaman.destroy');
 
     // Route untuk Laporan Peminjaman (Admin & Petugas)
+    Route::middleware(['auth', 'role:ADMIN, PETUGAS'])->group(function () {
     Route::get('/petugas/laporan', [LaporanController::class, 'index'])->name('petugas.laporan');
     Route::get('/petugas/laporan/cetak', [LaporanController::class, 'cetak'])->name('petugas.laporan.cetak');
     Route::get('/admin/laporan', [LaporanController::class, 'index'])->name('admin.laporan');
-    
+
     // Route SiswaController
     Route::middleware(['auth'])->group(function () {
     // Bisa diakses petugas & admin
@@ -91,6 +92,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pengguna', [PenggunaController::class, 'index'])->name('pengguna.index');
     Route::get('/pengguna/create', [PenggunaController::class, 'create'])->name('pengguna.create');
     Route::post('/pengguna', [PenggunaController::class, 'store'])->name('pengguna.store');
+});
 });
 });
 });
