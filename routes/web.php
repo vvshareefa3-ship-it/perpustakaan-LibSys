@@ -72,27 +72,19 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/petugas/peminjaman/setujui/{id}', [PeminjamanController::class, 'setujui'])->name('petugas.peminjaman.setujui');
 
     Route::patch('/peminjaman/{id}/kembalikan', [PeminjamanController::class, 'kembalikan'])->name('peminjaman.kembalikan');
-
     Route::post('/petugas/peminjaman/kembalikan/{id}', [PeminjamanController::class, 'kembalikan'])->name('petugas.peminjaman.kembalikan'); 
     Route::delete('/peminjaman/{id}', [PeminjamanController::class, 'destroy'])->name('peminjaman.destroy');
 
-    // Route untuk Laporan Peminjaman (Admin & Petugas)
-    Route::middleware(['auth', 'role:ADMIN, PETUGAS'])->group(function () {
+    // Route untuk Laporan Peminjaman (Admin & Petugas) - Tanpa middleware 'role' yang bikin error
     Route::get('/petugas/laporan', [LaporanController::class, 'index'])->name('petugas.laporan');
     Route::get('/petugas/laporan/cetak', [LaporanController::class, 'cetak'])->name('petugas.laporan.cetak');
     Route::get('/admin/laporan', [LaporanController::class, 'index'])->name('admin.laporan');
 
     // Route SiswaController
-    Route::middleware(['auth'])->group(function () {
-    // Bisa diakses petugas & admin
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
 
     // Route PenggunaController
-    Route::middleware(['auth'])->group(function () {
     Route::get('/pengguna', [PenggunaController::class, 'index'])->name('pengguna.index');
     Route::get('/pengguna/create', [PenggunaController::class, 'create'])->name('pengguna.create');
     Route::post('/pengguna', [PenggunaController::class, 'store'])->name('pengguna.store');
-});
-});
-});
 });

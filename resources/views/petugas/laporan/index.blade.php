@@ -20,7 +20,12 @@
                 <i class="fa-solid fa-chart-line text-warning"></i> LibSys <span class="fs-6 fw-normal text-light opacity-75">| Laporan Peminjaman</span>
             </a>
             
-            {{-- Tombol Kembali Dinamis Berdasarkan Role --}}
+            <div class="d-flex gap-2">
+        {{-- TOMBOL CETAK LAPORAN --}}
+        <a href="{{ route('petugas.laporan.cetak', ['status' => request('status')]) }}" target="_blank" class="btn btn-success px-3 py-2 shadow-sm">
+            <i class="fa-solid fa-print me-1"></i> Cetak / Print Laporan
+        </a>
+
             <div>
                 @if(auth()->user()->peran == 'ADMIN')
                     <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary btn-sm px-3">
