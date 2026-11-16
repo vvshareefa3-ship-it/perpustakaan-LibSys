@@ -145,6 +145,16 @@ public function store(Request $request)
     ]);
 
     $idSiswa = auth()->user()->id_siswa;
+    $idBuku = $request->id_buku;
+
+    $sudahAda = App\Models\Peminjaman::where('id_siswa', $idSiswa)
+    ->where('id_buku', $idBuku)
+    ->where('status', '!=', 'DIKEMBALIKAN')
+    ->exists();
+
+    if ($sudahAda) {
+        return redirect()->back()->with('error', 'Maaf anda sudah mengajukan/meminjam buku ini sebelumnya dan belum di kembalikan.');
+    }
 
     // 1. Cek apakah ada denda yang belum dibayar
     $peminjamanIds = \App\Models\Peminjaman::where('id_siswa', $idSiswa)->pluck('id_peminjaman');
@@ -178,14 +188,14 @@ public function store(Request $request)
 
     \App\Models\Peminjaman::create([
         'id_siswa'        => $idSiswa,
-        'id_buku'         => $request->id_buku,
-        'tanggal_pinjam'  => $tanggalPinjam,
-        'tanggal_kembali' => $tanggalKembali,
-        'status'          => 'PENDING', // Atau 'DIPINJAM' jika langsung disetujui tanpa konfirmasi petugas
+        'id_buku'         => $idBuku,
+        'tanggal_pinjam'  => now(),
+        'tanggal_kembali' => now()->addDays(7),
+        'status'          => 'PENDING',
     ]);
 
     // 5. KURANGI STOK BUKU OTOMATIS
-    // (Catatan: Jika ingin stok berkurang setelah disetujui petugas, proses pengurangan ini bisa dipindah ke fungsi 'setujui' petugas)
+    $buku = \App\Models\Buku::findOrFail($idBuku);
     $buku->stok -= 1;
     $buku->save();
 
