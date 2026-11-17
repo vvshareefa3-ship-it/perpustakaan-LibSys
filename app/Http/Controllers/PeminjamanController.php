@@ -178,10 +178,14 @@ public function store(Request $request)
 
     // 3. Cek ketersediaan stok buku
     $buku = \App\Models\Buku::findOrFail($request->id_buku);
-    if ($buku->stok <= 0) {
-        return redirect()->back()->with('error', 'Maaf, stok buku ini sedang habis.');
-    }
+    $sedangDipinjamOrangLain = \App\Models\Peminjaman::where('id_buku', $idBuku)
+        ->whereIn('status', ['PENDING', 'DIPINJAM'])
+        ->exists();
 
+    if ($buku->stok <= 0 || $sedangDipinjamOrangLain) {
+        return redirect()->back()->with('error', 'Maaf, buku ini sedang dalam proses peminjaman atau stoknya habis.');
+    }
+    
     // 4. SIMPAN DATA PEMINJAMAN (Aturan 7 hari otomatis)
     $tanggalPinjam = now();
     $tanggalKembali = $tanggalPinjam->copy()->addDays(7); // Aturan 7 hari batas pengembalian
