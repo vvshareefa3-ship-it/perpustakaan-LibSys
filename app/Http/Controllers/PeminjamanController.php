@@ -178,14 +178,17 @@ public function store(Request $request)
 
     // 3. Cek ketersediaan stok buku
     $buku = \App\Models\Buku::findOrFail($request->id_buku);
-    $sedangDipinjamOrangLain = \App\Models\Peminjaman::where('id_buku', $idBuku)
-        ->whereIn('status', ['PENDING', 'DIPINJAM'])
+    $sedangDipinjamOrangLain = \App\Models\Peminjaman::whereIn('status', ['PENDING', 'DIPINJAM'])
+        ->whereHas('detailPeminjaman', function ($query) use ($idBuku) {
+            $query->where('id_buku', $idBuku)
+                  ->whereIn('status_buku', ['DIPINJAM', 'PENDING', 'DIKEMBALIKAN']);
+        })
         ->exists();
 
-    if ($buku->stok <= 0 || $sedangDipinjamOrangLain) {
+    if ($buku->stok_tersedia <= 0 || $sedangDipinjamOrangLain) {
         return redirect()->back()->with('error', 'Maaf, buku ini sedang dalam proses peminjaman atau stoknya habis.');
     }
-    
+
     // 4. SIMPAN DATA PEMINJAMAN (Aturan 7 hari otomatis)
     $tanggalPinjam = now();
     $tanggalKembali = $tanggalPinjam->copy()->addDays(7); // Aturan 7 hari batas pengembalian
@@ -200,7 +203,7 @@ public function store(Request $request)
 
     // 5. KURANGI STOK BUKU OTOMATIS
     $buku = \App\Models\Buku::findOrFail($idBuku);
-    $buku->stok -= 1;
+    $buku->stok_tersedia -= 1;
     $buku->save();
 
     return redirect()->back()->with('success', 'Pengajuan peminjaman buku berhasil dikirim! Menunggu konfirmasi petugas.');
