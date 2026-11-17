@@ -241,7 +241,7 @@
             <a href="{{ route('kategori.index') }}" class="nav-link-custom">
                 <i class="fa-solid fa-book"></i> Katalog Buku
             </a>
-            <a href="{{ route('kelas.index') }}" class="nav-link-custom">
+            <a href="{{ route('siswa.info-kelas') }}" class="nav-link-custom">
                 <i class="fa-solid fa-school"></i> Info Kelas
             </a>
             <a href="{{ route('denda.index') }}" class="nav-link-custom">

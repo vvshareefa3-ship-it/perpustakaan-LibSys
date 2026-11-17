@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Petugas\DashboardController as PetugasDashboard;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboard;
+use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\BukuController;
@@ -82,6 +83,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Route SiswaController
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
+    Route::get('/siswa/info-kelas', [SiswaDashboardController::class, 'infoKelas'])->name('siswa.info-kelas');
 
     // Route PenggunaController
     Route::get('/pengguna', [PenggunaController::class, 'index'])->name('pengguna.index');

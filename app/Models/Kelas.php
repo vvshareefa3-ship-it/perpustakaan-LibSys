@@ -12,7 +12,6 @@ class Kelas extends Model
     protected $table = 'tabel_kelas';
     protected $primaryKey = 'id_kelas';
 
-    // Matikan timestamps karena tabel_kelas tidak memiliki kolom created_at/updated_at
     public $timestamps = false;
 
     protected $fillable = [

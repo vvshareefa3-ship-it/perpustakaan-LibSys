@@ -148,28 +148,36 @@
                                         @endphp
 
                                         @if($peminjaman)
-                                            @if($peminjaman->status == 'PENDING')
-                                                <button class="btn btn-secondary btn-sm rounded-pill px-3" disabled>
-                                                    <i class="fa-solid fa-clock me-1"></i> PENDING
-                                                </button>
-                                            @elseif($peminjaman->status == 'DIPINJAM')
-                                                <button class="btn btn-warning btn-sm rounded-pill px-3 text-white" disabled>
-                                                    <i class="fa-solid fa-book-reader me-1"></i> DIPINJAM
-                                                </button>
-                                            @endif
-                                        @else
-                                            @if($totalPinjamanAktif >= 3)
-                                                <button class="btn btn-danger btn-sm rounded-pill px-3" disabled>
-                                                    <i class="fa-solid fa-ban me-1"></i> Batas Maksimal 3 Buku
-                                                </button>
-                                            @else
-                                                <form action="{{ route('reservasi.store', $buku->id_buku) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">
-                                                        <i class="fa-solid fa-bookmark me-1"></i> Reservasi
-                                                    </button>
-                                                </form>
-                                            @endif
+    {{-- Jika siswa yang login sedang meminjam/pending buku ini --}}
+    @if($peminjaman->status == 'PENDING')
+        <button class="btn btn-secondary btn-sm rounded-pill px-3" disabled>
+            <i class="fa-solid fa-clock me-1"></i> PENDING
+        </button>
+    @elseif($peminjaman->status == 'DIPINJAM')
+        <button class="btn btn-warning btn-sm rounded-pill px-3 text-white" disabled>
+            <i class="fa-solid fa-book-reader me-1"></i> DIPINJAM
+        </button>
+    @endif
+@else
+    {{-- Jika siswa belum meminjam buku ini, cek batas maksimal & stok global --}}
+    @if($totalPinjamanAktif >= 3)
+        <button class="btn btn-danger btn-sm rounded-pill px-3" disabled>
+            <i class="fa-solid fa-ban me-1"></i> Batas Maksimal 3 Buku
+        </button>
+    @elseif($buku->stok_tersedia <= 0)
+        {{-- TAMBAHAN INI: Jika stok buku habis/dipinjam orang lain --}}
+        <button class="btn btn-secondary btn-sm rounded-pill px-3" disabled style="background-color: #6c757d; border-color: #6c757d;">
+            <i class="fa-solid fa-ban me-1"></i> Maaf, Sedang Dipinjam
+        </button>
+    @else
+        {{-- Jika aman dan stok ada, tampilkan tombol reservasi --}}
+        <form action="{{ route('reservasi.store', $buku->id_buku) }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">
+                <i class="fa-solid fa-bookmark me-1"></i> Reservasi
+            </button>
+        </form>
+    @endif
                                         @endif
 
                                     @else
