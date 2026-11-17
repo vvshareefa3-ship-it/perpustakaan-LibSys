@@ -10,7 +10,7 @@ use App\Models\Buku;
 use App\Models\Siswa;
 use App\Models\Peminjaman;
 use App\Models\User;
-use Carbon\Carbon; // 1. Tambahkan import Carbon di atas
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -19,9 +19,8 @@ class DashboardController extends Controller
         $user = Auth::user();
         $totalBuku = Buku::count();
         $totalSiswa = Siswa::count();
-        $totalPetugas = User::where('peran', 'PETUGAS')->count();
-        $bukuDipinjam = Peminjaman::where('status', 'DIPINJAM')->count();
-        
+        $bukuDipinjamCount = Peminjaman::where('status', 'DIPINJAM')->count();
+
         $totalTerlambat = Denda::where('keterangan', 'Belum Dibayar')->count();
 
         $peminjamanTerbaru = Peminjaman::with(['buku', 'siswa'])
@@ -33,8 +32,7 @@ class DashboardController extends Controller
             'user',
             'totalBuku',
             'totalSiswa',
-            'totalPetugas',
-            'bukuDipinjam',
+            'bukuDipinjamCount',
             'totalTerlambat',
             'peminjamanTerbaru'
         ));

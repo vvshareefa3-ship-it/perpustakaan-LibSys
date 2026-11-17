@@ -16,11 +16,11 @@ class PenggunaController extends Controller
         return view('pengguna.index', compact('daftarPengguna'));
     }
 
-    // Menampilkan form tambah pengguna
-    public function create()
-    {
-        return view('pengguna.create');
-    }
+   public function create()
+{
+    $listKelas = \App\Models\Kelas::all();
+    return view('pengguna.create', compact('listKelas'));
+}
 
     // Menyimpan data pengguna baru (termasuk kondisi dinamis Siswa / Petugas)
     public function store(Request $request)

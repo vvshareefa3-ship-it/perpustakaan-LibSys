@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Petugas\DashboardController as PetugasDashboard;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboard;
+use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\BukuController;
@@ -72,25 +73,20 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/petugas/peminjaman/setujui/{id}', [PeminjamanController::class, 'setujui'])->name('petugas.peminjaman.setujui');
 
     Route::patch('/peminjaman/{id}/kembalikan', [PeminjamanController::class, 'kembalikan'])->name('peminjaman.kembalikan');
-
     Route::post('/petugas/peminjaman/kembalikan/{id}', [PeminjamanController::class, 'kembalikan'])->name('petugas.peminjaman.kembalikan'); 
     Route::delete('/peminjaman/{id}', [PeminjamanController::class, 'destroy'])->name('peminjaman.destroy');
 
-    // Route untuk Laporan Peminjaman (Admin & Petugas)
+    // Route untuk Laporan Peminjaman (Admin & Petugas) - Tanpa middleware 'role' yang bikin error
     Route::get('/petugas/laporan', [LaporanController::class, 'index'])->name('petugas.laporan');
     Route::get('/petugas/laporan/cetak', [LaporanController::class, 'cetak'])->name('petugas.laporan.cetak');
     Route::get('/admin/laporan', [LaporanController::class, 'index'])->name('admin.laporan');
-    
+
     // Route SiswaController
-    Route::middleware(['auth'])->group(function () {
-    // Bisa diakses petugas & admin
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
+    Route::get('/siswa/info-kelas', [SiswaDashboardController::class, 'infoKelas'])->name('siswa.info-kelas');
 
     // Route PenggunaController
-    Route::middleware(['auth'])->group(function () {
     Route::get('/pengguna', [PenggunaController::class, 'index'])->name('pengguna.index');
     Route::get('/pengguna/create', [PenggunaController::class, 'create'])->name('pengguna.create');
     Route::post('/pengguna', [PenggunaController::class, 'store'])->name('pengguna.store');
-});
-});
 });

@@ -93,18 +93,11 @@
 
             <div class="mb-0">
                 <label class="form-label fw-bold small">Kelas / Jurusan</label>
-                <select name="id_kelas" class="form-select">
-                    <option value="">-- Pilih Kelas --</option>
-                    <option value="1">10 BRP</option>
-                    <option value="1">11 BRP</option>
-                    <option value="1">12 BRP</option>
-                    <option value="1">10 RPL</option>
-                    <option value="1">11 RPL</option>
-                    <option value="1">12 RPL</option>
-                    <option value="1">10 DKV</option>
-                    <option value="1">11 DKV</option>
-                    <option value="1">12 DKV</option>
-                    <!-- Sesuaikan opsi kelas lainnya -->
+                <select name="id_kelas" class="form-select" required>
+                <option value="">-- Pilih Kelas --</option>
+            @foreach($listKelas as $kelas)
+                <option value="{{ $kelas->id_kelas }}">{{ $kelas->nama_kelas }} ({{ $kelas->nama_jurusan }})</option>
+            @endforeach
                 </select>
             </div>
         </div>

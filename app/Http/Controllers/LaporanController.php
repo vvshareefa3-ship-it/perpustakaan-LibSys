@@ -7,22 +7,24 @@ use App\Models\Peminjaman;
 
 class LaporanController extends Controller
 {
-   public function index(Request $request)
+  public function index(Request $request)
 {
-    if (auth()->user()->peran == 'SISWA') {
-        abort(403, 'Unauthorized action.');
-    }
+    $query = Peminjaman::with(['buku', 'siswa'])
+        ->whereIn('status', ['DIPINJAM', 'DIKEMBALIKAN']);
 
-    $query = Peminjaman::with(['buku', 'siswa']);
-
-    // Tangkap parameter status
-    if ($request->has('status') && $request->status != '') {
+    // Filter berdasarkan status jika dipilih
+    if ($request->filled('status') && in_array($request->status, ['DIPINJAM', 'DIKEMBALIKAN'])) {
         $query->where('status', $request->status);
     }
 
-    $laporanPeminjaman = $query->latest('id_peminjaman')->get();
+    $laporans = $query->latest('tanggal_pinjam')->get();
 
-    return view('petugas.laporan.index', compact('laporanPeminjaman'));
+    // Hitung statistik (Hanya DIPINJAM dan DIKEMBALIKAN)
+    $totalTransaksi = Peminjaman::whereIn('status', ['DIPINJAM', 'DIKEMBALIKAN'])->count();
+    $sedangDipinjam = Peminjaman::where('status', 'DIPINJAM')->count();
+    $sudahDikembali = Peminjaman::where('status', 'DIKEMBALIKAN')->count();
+
+    return view('petugas.laporan.index', compact('laporans', 'totalTransaksi', 'sedangDipinjam', 'sudahDikembali'));
 }
 
    public function cetak(Request $request)
