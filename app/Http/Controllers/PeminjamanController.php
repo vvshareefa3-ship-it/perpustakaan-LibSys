@@ -141,22 +141,25 @@ public function store(Request $request)
 {
     // Validasi input buku yang dipilih
     $request->validate([
-        'id_buku' => 'required|exists:tabel_buku,id_buku', // Sesuaikan nama tabel buku Anda
+        'id_buku' => 'required|exists:tabel_buku,id_buku', 
     ]);
 
     $idSiswa = auth()->user()->id_siswa;
     $idBuku = $request->id_buku;
 
-    $sudahAda = App\Models\Peminjaman::where('id_siswa', $idSiswa)
-    ->where('id_buku', $idBuku)
-    ->where('status', '!=', 'DIKEMBALIKAN')
-    ->exists();
+    // 1. Cek apakah siswa ybs sudah meminjam buku ini tapi belum dikembalikan
+    $sudahAda = \App\Models\Peminjaman::where('id_siswa', $idSiswa)
+        ->where('status', '!=', 'DIKEMBALIKAN')
+        ->whereHas('detailPeminjaman', function ($query) use ($idBuku) {
+            $query->where('id_buku', $idBuku);
+        })
+        ->exists();
 
     if ($sudahAda) {
         return redirect()->back()->with('error', 'Maaf anda sudah mengajukan/meminjam buku ini sebelumnya dan belum di kembalikan.');
     }
 
-    // 1. Cek apakah ada denda yang belum dibayar
+    // 2. Cek apakah ada denda yang belum dibayar
     $peminjamanIds = \App\Models\Peminjaman::where('id_siswa', $idSiswa)->pluck('id_peminjaman');
     
     $adaDendaBelumBayar = \App\Models\Denda::whereIn('id_peminjaman', $peminjamanIds)
@@ -167,7 +170,7 @@ public function store(Request $request)
         return redirect()->back()->with('error', 'Maaf, Anda memiliki tanggungan denda yang belum dibayar. Harap lunasi denda ke petugas perpustakaan terlebih dahulu.');
     }
 
-    // 2. Cek batas maksimal peminjaman aktif (maksimal 3 buku)
+    // 3. Cek batas maksimal peminjaman aktif (maksimal 3 buku)
     $jumlahPeminjamanAktif = \App\Models\Peminjaman::where('id_siswa', $idSiswa)
                                 ->whereIn('status', ['PENDING', 'DIPINJAM'])
                                 ->count();
@@ -176,34 +179,38 @@ public function store(Request $request)
         return redirect()->back()->with('error', 'Maaf, Anda telah mencapai batas maksimal peminjaman (3 buku). Harap kembalikan buku terlebih dahulu.');
     }
 
-    // 3. Cek ketersediaan stok buku
-    $buku = \App\Models\Buku::findOrFail($request->id_buku);
+    // 4. Cek ketersediaan stok buku & CEGAH TOTAL DOUBLE BOOKING OLEH SIAPA PUN
+    $buku = \App\Models\Buku::findOrFail($idBuku);
+
+    // Cek apakah buku ini sudah ada di transaksi lain yang berstatus PENDING atau DIPINJAM
     $sedangDipinjamOrangLain = \App\Models\Peminjaman::whereIn('status', ['PENDING', 'DIPINJAM'])
         ->whereHas('detailPeminjaman', function ($query) use ($idBuku) {
-            $query->where('id_buku', $idBuku)
-                  ->whereIn('status_buku', ['DIPINJAM', 'PENDING', 'DIKEMBALIKAN']);
+            $query->where('id_buku', $idBuku);
         })
         ->exists();
 
     if ($buku->stok_tersedia <= 0 || $sedangDipinjamOrangLain) {
-        return redirect()->back()->with('error', 'Maaf, buku ini sedang dalam proses peminjaman atau stoknya habis.');
+        return redirect()->back()->with('error', 'Maaf, buku ini sedang dalam antrean peminjaman (Pending) atau stoknya habis.');
     }
 
-    // 4. SIMPAN DATA PEMINJAMAN (Aturan 7 hari otomatis)
-    $tanggalPinjam = now();
-    $tanggalKembali = $tanggalPinjam->copy()->addDays(7); // Aturan 7 hari batas pengembalian
-
-    \App\Models\Peminjaman::create([
+    // 5. SIMPAN DATA PEMINJAMAN UTAMA
+    $peminjaman = \App\Models\Peminjaman::create([
         'id_siswa'        => $idSiswa,
-        'id_buku'         => $idBuku,
         'tanggal_pinjam'  => now(),
         'tanggal_kembali' => now()->addDays(7),
+        'tenggat_waktu'   => now()->addDays(7),
         'status'          => 'PENDING',
     ]);
 
-    // 5. KURANGI STOK BUKU OTOMATIS
-    $buku = \App\Models\Buku::findOrFail($idBuku);
-    $buku->stok_tersedia -= 1;
+    \DB::table('tabel_detail_peminjaman')->insert([
+        'id_peminjaman' => $peminjaman->id_peminjaman,
+        'id_buku'       => $idBuku,
+        'jumlah'        => 1,
+        'status_buku'   => 'PENDING',
+    ]);
+
+    // 7. KURANGI STOK BUKU OTOMATIS
+    $buku->stok_tersedia -= 0;
     $buku->save();
 
     return redirect()->back()->with('success', 'Pengajuan peminjaman buku berhasil dikirim! Menunggu konfirmasi petugas.');
