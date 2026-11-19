@@ -43,4 +43,31 @@ class DashboardController extends Controller
 
         return view('siswa.info-kelas', compact('user', 'siswa'));
     }
+
+    public function riwayatPeminjaman()
+    {
+        $user = auth()->user();
+
+        $siswa = Siswa::where('nis_siswa', $user->username)
+            ->first()
+            ?? Siswa::where('id_user', $user->id ?? $user->id_user)->first()
+            ?? Siswa::where('nis_siswa', $user->id_siswa ?? null)->first();
+
+        $riwayatPeminjaman = collect();
+
+        if ($siswa) {
+            $riwayatPeminjaman = Peminjaman::with('buku')
+                ->where(function ($query) use ($siswa, $user) {
+                    $query->where('id_siswa', $siswa->nis_siswa);
+                    $userId = $user->id ?? $user->id_user ?? null;
+                    if ($userId) {
+                        $query->orWhere('id_user', $userId);
+                    }
+                })
+                ->orderByDesc('id_peminjaman')
+                ->get();
+        }
+
+        return view('siswa.riwayat', compact('user', 'siswa', 'riwayatPeminjaman'));
+    }
 }

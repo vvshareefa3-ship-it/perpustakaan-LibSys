@@ -379,85 +379,264 @@
                 </div>
             </div>
 
-            <!-- TABEL AKTIVITAS / PEMINJAMAN TERBARU -->
-            <div class="card card-custom border-0 overflow-hidden mb-4">
-                <div class="card-header bg-white py-3 px-4 border-bottom border-light">
-                    <h5 class="fw-bold mb-0 text-dark d-flex align-items-center">
-                        <i class="fa-solid fa-list-check text-primary me-2"></i> Aktivitas Peminjaman Terbaru
-                    </h5>
+          <!-- TABEL LOG AKTIVITAS PEMINJAMAN PER SISWA (PETUGAS) -->
+<div class="card card-custom border-0 overflow-hidden mb-4">
+    <div class="card-header bg-white py-3 px-4 border-bottom border-light d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <h5 class="fw-bold mb-0 text-dark d-flex align-items-center text-nowrap">
+            <i class="fa-solid fa-list-check text-primary me-2"></i> Aktivitas Peminjaman Terbaru
+        </h5>
+
+        <div class="input-group flex-grow-1" style="max-width: 450px;">
+            <span class="input-group-text bg-light border-end-0 rounded-start-pill px-3">
+                <i class="fa-solid fa-magnifying-glass text-muted"></i>
+            </span>
+            <input type="text"
+                   id="cariAktivitasPeminjaman"
+                   class="form-control border-start-0 rounded-end-pill py-2"
+                   placeholder="Cari nama siswa, NIS, judul buku, atau status...">
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 table-custom">
+                <thead>
+                    <tr>
+                        <th class="ps-4">No</th>
+                        <th>Peminjam (Siswa)</th>
+                        <th>Judul Buku</th>
+                        <th>Tanggal Pinjam</th>
+                        <th>Batas Pengembalian</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Detail</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyAktivitasPeminjaman">
+                    @forelse($logPerSiswa ?? [] as $index => $entry)
+                        @php
+                            $item = $entry['pinjaman_terbaru'];
+                            $statusUpper = strtoupper(trim($item->status ?? ''));
+                            $modalId = 'modalPetugasSiswa_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $entry['id_siswa'] . '_' . $index);
+                        @endphp
+                        <tr>
+                            <td class="ps-4">{{ $index + 1 }}</td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ $entry['nama_siswa'] }}</div>
+                                <small class="text-muted">NIS: {{ $entry['id_siswa'] }}</small>
+                                <span class="badge bg-light text-dark border ms-1">{{ $entry['total_transaksi'] }}x</span>
+                            </td>
+                            <td>{{ $item->buku->judul_buku ?? 'Buku' }}</td>
+                            <td>{{ !empty($item->tanggal_pinjam) ? date('d/m/Y', strtotime($item->tanggal_pinjam)) : '-' }}</td>
+                            <td>{{ !empty($item->tanggal_kembali) ? date('d/m/Y', strtotime($item->tanggal_kembali)) : '-' }}</td>
+                            <td class="text-center">
+                                @if($statusUpper == 'PENDING')
+                                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Pending</span>
+                                @elseif($statusUpper == 'DIPINJAM')
+                                    <span class="badge bg-primary px-3 py-2 rounded-pill">Dipinjam</span>
+                                @elseif($statusUpper == 'DIKEMBALIKAN')
+                                    <span class="badge bg-success px-3 py-2 rounded-pill">Dikembalikan</span>
+                                @else
+                                    <span class="badge bg-secondary px-3 py-2 rounded-pill">{{ $item->status ?? '-' }}</span>
+                                @endif
+                            </td>
+                            <td class="text-center">
+                                <button type="button"
+                                        class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#{{ $modalId }}">
+                                    <i class="fa-solid fa-eye me-1"></i> Detail
+                                </button>
+                            </td>
+                            <td class="text-center">
+                                @if($statusUpper == 'PENDING')
+                                    <form action="{{ route('petugas.peminjaman.setujui', $item->id_peminjaman) }}" method="POST" class="d-inline form-setujui">
+                                        @csrf
+                                        <button type="button" class="btn btn-sm btn-success rounded-circle p-2 shadow-sm me-1" title="Setujui Peminjaman" onclick="konfirmasiSetujui(this)">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    </form>
+                                @endif
+
+                                @if($statusUpper == 'DIPINJAM')
+                                    <form action="{{ route('peminjaman.kembalikan', $item->id_peminjaman) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="button" class="btn btn-sm btn-success rounded-circle p-2 shadow-sm" title="Proses Pengembalian" onclick="konfirmasiKembalikan(this)">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    </form>
+                                @endif
+
+                                <form action="{{ route('peminjaman.destroy', $item->id_peminjaman) }}" method="POST" class="d-inline form-hapus">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" class="btn btn-sm btn-danger rounded-circle p-2 shadow-sm" title="Hapus Data" onclick="konfirmasiHapus(this)">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-folder-open fa-2x mb-2 text-secondary opacity-50"></i>
+                                <p class="mb-0 small">Belum ada aktivitas peminjaman terbaru.</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL DETAIL RIWAYAT PEMINJAMAN & DENDA PER SISWA (PETUGAS) --}}
+@foreach($logPerSiswa ?? [] as $index => $entry)
+    @php
+        $modalId = 'modalPetugasSiswa_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $entry['id_siswa'] . '_' . $index);
+    @endphp
+    <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 rounded-4 shadow">
+                <div class="modal-header bg-dark text-white rounded-top-4">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0">
+                            <i class="fa-solid fa-user-clock me-2"></i> Detail Riwayat: {{ $entry['nama_siswa'] }}
+                        </h5>
+                        <small class="text-light text-opacity-75">NIS: {{ $entry['id_siswa'] }}</small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="card-body p-0">
+
+                <div class="modal-body p-4">
+                    <h6 class="fw-bold text-dark mb-3">
+<h6 class="fw-bold text-dark mb-3">
+    <i class="fa-solid fa-book-open text-primary me-1"></i> Riwayat Peminjaman ({{ $entry['riwayat_peminjaman']->count() }})
+</h6>
+<div class="table-responsive mb-4">
+    <table class="table table-sm table-bordered align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>No</th>
+                <th>Judul Buku</th>
+                <th>Tgl Pinjam</th>
+                <th>Tgl / Batas Kembali</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($entry['riwayat_peminjaman'] as $rIdx => $rPinjam)
+                @php $st = strtoupper(trim($rPinjam->status ?? '')); @endphp
+                <tr>
+                    <td>{{ $rIdx + 1 }}</td>
+                    <td class="fw-semibold">{{ $rPinjam->buku->judul_buku ?? 'Buku' }}</td>
+                    <td>{{ !empty($rPinjam->tanggal_pinjam) ? date('d/m/Y', strtotime($rPinjam->tanggal_pinjam)) : '-' }}</td>
+                    <td>
+                        @if(!empty($rPinjam->tanggal_kembali))
+                            {{ date('d/m/Y', strtotime($rPinjam->tanggal_kembali)) }}
+                        @elseif(!empty($rPinjam->tenggat_waktu))
+                            {{ date('d/m/Y', strtotime($rPinjam->tenggat_waktu)) }}
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td class="text-center">
+                        @if($st == 'DIKEMBALIKAN')
+                            <span class="badge bg-success rounded-pill">Dikembalikan</span>
+                        @elseif($st == 'DIPINJAM')
+                            <span class="badge bg-primary rounded-pill">Dipinjam</span>
+                        @elseif($st == 'PENDING')
+                            <span class="badge bg-warning text-dark rounded-pill">Pending</span>
+                        @else
+                            <span class="badge bg-secondary rounded-pill">{{ $rPinjam->status ?? '-' }}</span>
+                        @endif
+                    </td>
+                    <td class="text-center">
+                        @if($st == 'PENDING')
+                            <form action="{{ route('petugas.peminjaman.setujui', $rPinjam->id_peminjaman) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="button"
+                                        class="btn btn-sm btn-success rounded-pill px-2 py-1"
+                                        title="Setujui Buku Ini"
+                                        onclick="konfirmasiSetujui(this)">
+                                    <i class="fa-solid fa-check me-1"></i> Setujui
+                                </button>
+                            </form>
+                        @elseif($st == 'DIPINJAM')
+                            <form action="{{ route('peminjaman.kembalikan', $rPinjam->id_peminjaman) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('PATCH')
+                                <button type="button"
+                                        class="btn btn-sm btn-primary rounded-pill px-2 py-1"
+                                        title="Kembalikan Buku Ini"
+                                        onclick="konfirmasiKembalikan(this)">
+                                    <i class="fa-solid fa-rotate-left me-1"></i> Kembalikan
+                                </button>
+                            </form>
+                        @else
+                            <span class="text-muted small">-</span>
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-3">Belum ada riwayat peminjaman.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+                    <h6 class="fw-bold text-dark mb-3">
+                        <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i> Riwayat Denda ({{ $entry['riwayat_denda']->count() }})
+                    </h6>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 table-custom">
-                            <thead>
+                        <table class="table table-sm table-bordered align-middle mb-0">
+                            <thead class="table-light">
                                 <tr>
-                                    <th class="ps-4">No</th>
-                                    <th>Peminjam (Siswa)</th>
-                                    <th>Judul Buku</th>
-                                    <th>Tanggal Pinjam</th>
-                                    <th>Batas Pengembalian</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Aksi</th>
+                                    <th>No</th>
+                                    <th>ID Pinjam</th>
+                                    <th>Jenis Denda</th>
+                                    <th>Terlambat</th>
+                                    <th>Total Denda</th>
+                                    <th class="text-center">Status Bayar</th>
                                 </tr>
                             </thead>
                             <tbody>
-    @forelse($peminjaman ?? [] as $index => $item)
-        <tr>
-            <td class="ps-4">{{ $index + 1 }}</td>
-            <td>{{ $item->siswa->nama_siswa ?? $item->id_siswa }}</td>
-            <td>{{ $item->buku->judul_buku ?? 'Buku' }}</td>
-            <td>{{ date('d/m/Y', strtotime($item->tanggal_pinjam)) }}</td>
-            <td>{{ $item->tanggal_kembali ? date('d/m/Y', strtotime($item->tanggal_kembali)) : '-' }}</td>
-            <td class="text-center">
-    @if($item->status == 'PENDING')
-        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Pending</span>
-    @elseif($item->status == 'DIPINJAM')
-        <span class="badge bg-primary px-3 py-2 rounded-pill">Dipinjam</span>
-    @elseif($item->status == 'DIKEMBALIKAN')
-        <span class="badge bg-success px-3 py-2 rounded-pill">Dikembalikan</span>
-    @else
-        <span class="badge bg-secondary px-3 py-2 rounded-pill">{{ $item->status }}</span>
-    @endif
-</td>
+                                @forelse($entry['riwayat_denda'] as $dIdx => $denda)
+                                    @php $lunas = ($denda->keterangan ?? '') === 'Sudah Dibayar'; @endphp
+                                    <tr>
+                                        <td>{{ $dIdx + 1 }}</td>
+                                        <td>#{{ $denda->id_peminjaman }}</td>
+                                        <td>{{ $denda->jenis_denda ?? '-' }}</td>
+                                        <td>{{ ($denda->jumlah_hari_terlambat ?? 0) > 0 ? $denda->jumlah_hari_terlambat . ' Hari' : '-' }}</td>
+                                        <td class="fw-bold text-danger">Rp {{ number_format($denda->total_denda ?? 0, 0, ',', '.') }}</td>
+                                        <td class="text-center">
+                                            @if($lunas)
+                                                <span class="badge bg-success rounded-pill">Sudah Dibayar</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark rounded-pill">Belum Dibayar</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-3">Tidak ada riwayat denda.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-<td class="text-center">
-    @if(strtoupper($item->status) == 'PENDING')
-    <form action="{{ route('petugas.peminjaman.setujui', $item->id_peminjaman) }}" method="POST" class="d-inline form-setujui">
-        @csrf
-        <button type="button" class="btn btn-sm btn-success rounded-circle p-2 shadow-sm me-1" title="Setujui Peminjaman" onclick="konfirmasiSetujui(this)">
-            <i class="fa-solid fa-check"></i>
-        </button>
-    </form>
-@endif
-
-    @if(strtoupper($item->status) == 'DIPINJAM')
-    <form action="{{ route('peminjaman.kembalikan', $item->id_peminjaman) }}" method="POST" class="d-inline">
-        @csrf
-        @method('PATCH')
-        <button type="button" class="btn btn-sm btn-success rounded-circle p-2 shadow-sm" title="Proses Pengembalian" onclick="konfirmasiKembalikan(this)">
-            <i class="fa-solid fa-check"></i>
-        </button>
-    </form>
-@endif
-
-    <form action="{{ route('peminjaman.destroy', $item->id_peminjaman) }}" method="POST" class="d-inline form-hapus">
-    @csrf
-    @method('DELETE')
-    <button type="button" class="btn btn-sm btn-danger rounded-circle p-2 shadow-sm" title="Hapus Data" onclick="konfirmasiHapus(this)">
-        <i class="fa-solid fa-trash"></i>
-    </button>
-</form>
-</td>
-        </tr>
-    @empty
-        <tr>
-            <td colspan="7" class="text-center py-5 text-muted">
-                <i class="fa-solid fa-folder-open fa-2x mb-2 text-secondary opacity-50"></i>
-                <p class="mb-0 small">Belum ada aktivitas peminjaman terbaru.</p>
-            </td>
-        </tr>
-    @endforelse
-</tbody>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
                         </table>
                     </div>
                 </div>
@@ -474,6 +653,7 @@ function toggleSidebar() {
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 function konfirmasiHapus(button) {
     Swal.fire({
@@ -492,8 +672,6 @@ function konfirmasiHapus(button) {
     });
 }
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 function konfirmasiSetujui(button) {
@@ -515,7 +693,6 @@ function konfirmasiSetujui(button) {
 }
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 function konfirmasiKembalikan(button) {
     Swal.fire({
@@ -535,5 +712,49 @@ function konfirmasiKembalikan(button) {
     });
 }
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('cariAktivitasPeminjaman');
+    const tbody = document.getElementById('bodyAktivitasPeminjaman');
+
+    if (!searchInput || !tbody) return;
+
+    searchInput.addEventListener('input', function () {
+        const keyword = this.value.toLowerCase().trim();
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(
+            row => row.id !== 'rowTidakDitemukan' && !row.querySelector('td[colspan]')
+        );
+
+        let adaCocok = false;
+
+        rows.forEach(row => {
+            const teksBaris = row.textContent.toLowerCase();
+            const cocok = teksBaris.includes(keyword);
+            row.style.display = cocok ? '' : 'none';
+            if (cocok) adaCocok = true;
+        });
+
+        const existingEmpty = document.getElementById('rowTidakDitemukan');
+        if (existingEmpty) existingEmpty.remove();
+
+        if (!adaCocok && rows.length > 0) {
+            const jumlahKolom = rows[0].children.length || 7;
+            const trKosong = document.createElement('tr');
+            trKosong.id = 'rowTidakDitemukan';
+
+            const td = document.createElement('td');
+            td.colSpan = jumlahKolom;
+            td.className = 'text-center py-4 text-muted';
+            td.textContent = `Data peminjaman untuk "${this.value}" tidak ditemukan.`;
+
+            trKosong.appendChild(td);
+            tbody.appendChild(trKosong);
+        }
+    });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

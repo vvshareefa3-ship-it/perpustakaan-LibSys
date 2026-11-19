@@ -52,4 +52,9 @@ class Peminjaman extends Model
     {
         return $this->belongsTo(Siswa::class, 'id_siswa', 'nis_siswa');
     }
+
+    public function denda()
+{
+    return $this->hasOne(Denda::class, 'id_peminjaman', 'id_peminjaman');
+}
 }

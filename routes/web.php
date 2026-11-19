@@ -84,6 +84,8 @@ Route::middleware(['auth'])->group(function () {
     // Route SiswaController
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
     Route::get('/siswa/info-kelas', [SiswaDashboardController::class, 'infoKelas'])->name('siswa.info-kelas');
+    Route::get('/siswa/riwayat-peminjaman', [SiswaDashboardController::class, 'riwayatPeminjaman'])
+    ->name('siswa.riwayat-peminjaman');
 
     // Route PenggunaController
     Route::get('/pengguna', [PenggunaController::class, 'index'])->name('pengguna.index');
