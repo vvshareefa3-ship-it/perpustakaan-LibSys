@@ -241,6 +241,9 @@
             <a href="{{ route('kategori.index') }}" class="nav-link-custom">
                 <i class="fa-solid fa-book"></i> Katalog Buku
             </a>
+            <a href="{{ route('siswa.riwayat-peminjaman') }}" class="nav-link-custom {{ request()->routeIs('siswa.riwayat-peminjaman') ? 'active' : '' }}">
+               <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Peminjaman
+            </a>
             <a href="{{ route('siswa.info-kelas') }}" class="nav-link-custom">
                 <i class="fa-solid fa-school"></i> Info Kelas
             </a>
@@ -445,6 +448,56 @@
 function toggleSidebar() {
     document.body.classList.toggle('sidebar-collapsed');
     document.body.classList.toggle('sidebar-mobile-show');
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    @if(session('success'))
+        Swal.fire({
+            title: 'Reservasi Berhasil!',
+            text: @json(session('success')),
+            icon: 'success',
+            confirmButtonColor: '#2563eb',
+            confirmButtonText: 'OK'
+        });
+    @endif
+
+    @if(session('error'))
+        Swal.fire({
+            title: 'Gagal Reservasi',
+            text: @json(session('error')),
+            icon: 'error',
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Tutup'
+        });
+    @endif
+});
+</script>
+
+<script>
+function konfirmasiReservasi(button, judulBuku = 'buku ini') {
+    Swal.fire({
+        title: 'Ajukan Reservasi Buku?',
+        text: `Apakah Anda yakin ingin mengajukan reservasi untuk "${judulBuku}"?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#2563eb',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Reservasi!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = button.closest('form');
+            if (form) {
+                form.submit();
+            } else if (button.dataset.href) {
+                window.location.href = button.dataset.href;
+            }
+        }
+    });
 }
 </script>
 </body>

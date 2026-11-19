@@ -49,14 +49,7 @@
                                     <td class="text-center">#{{ $d->id_peminjaman }}</td>
                                     <td>{{ $d->peminjaman->siswa->nama_siswa ?? $d->peminjaman->nama_siswa ?? 'Siswa' }}</td>
                                     <td>
-                                       @if($d->jenis_denda == 'KETERLAMBATAN')
-                                      <span class="badge bg-secondary">Keterlambatan</span>
-                                       @elseif($d->jenis_denda == 'KERUSAKAN')
-                                      <span class="badge bg-warning text-dark">Kerusakan Buku</span>
-                                       @else
-                                      <span class="badge bg-danger">Kehilangan Buku</span>
-                                       @endif
-                                    </td>
+                                     KETERLAMBATAN
                                     <td class="text-center">
                                       @if($d->jenis_denda == 'KETERLAMBATAN')
                                          {{ $d->jumlah_hari_terlambat }} Hari
